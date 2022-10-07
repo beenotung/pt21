@@ -23,7 +23,7 @@ export function simulate() {
       player.endGame()
       if (player.isDead) {
         // console.log(player.name, 'dead')
-        continue
+        // continue
       }
     }
 
