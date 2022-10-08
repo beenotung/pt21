@@ -100,7 +100,7 @@ export class SafePlayer extends Player {
   }
 }
 
-export class GamblerPlayer extends SafePlayer {
+export class GamblerPlayer extends Player {
   name = 'gambler-player'
 
   lastBalance = this.balance
