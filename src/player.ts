@@ -1,6 +1,6 @@
 import { CardValue } from './data'
 import { evalCards } from './engine'
-const { floor, random, min, max } = Math
+const { floor, round, random, min, max } = Math
 
 export abstract class Player {
   balance = 1000
@@ -74,11 +74,23 @@ export class RandomPlayer extends Player {
 
 export class SafePlayer extends Player {
   name = 'safe-player'
+
+  lastBalance = this.balance
   getBet(): number {
-    if (this.balance > 1000) {
-      return 1
+    let defer = (res: number) => {
+      this.lastBalance = this.balance
+      return res
     }
-    return floor(this.balance / 1000) + 1
+    if (this.balance > this.lastBalance) {
+      // last win
+      return defer(1)
+    } else if (this.balance < this.lastBalance) {
+      // last lose
+      return defer(3)
+    } else {
+      // last draw
+      return defer(2)
+    }
   }
 
   shouldTake(): boolean {
@@ -90,6 +102,39 @@ export class SafePlayer extends Player {
 
 export class GamblerPlayer extends SafePlayer {
   name = 'gambler-player'
+
+  lastBalance = this.balance
+  lastBet = 1
+  getBet(): number {
+    let defer = () => {
+      this.lastBalance = this.balance
+      if (this.lastBet > this.balance) {
+        this.lastBet = this.balance
+      }
+      return this.lastBet
+    }
+    if (this.balance > this.lastBalance) {
+      // last win
+      this.lastBet = 1
+      return defer()
+    } else if (this.balance < this.lastBalance) {
+      // last lose
+      // let rate = 2 // can have >5k last balance
+      // let rate = 2.5 // can have >30k last balance
+      let rate = 3 // can have >100k last balance
+      this.lastBet = round(this.lastBet * rate)
+      return defer()
+    } else {
+      // last draw
+      return defer()
+    }
+  }
+
+  shouldTake(): boolean {
+    let res = this.checkCardOnHand()
+    if (res.isDead) return false
+    return res.maxScore <= 16
+  }
 }
 
 // secret
