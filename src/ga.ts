@@ -1,5 +1,5 @@
 import { Pool } from './engine'
-import { GamblerPlayer, Host, Player } from './player'
+import { Host, Player } from './player'
 
 let pool = new Pool()
 let host = new Host()
