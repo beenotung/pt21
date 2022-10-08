@@ -1,9 +1,11 @@
 import { Pool } from './engine'
-import { GamblerPlayer, Host, Player, RandomPlayer, SafePlayer } from './player'
+import { evalPlayer } from './ga'
+import { Host, Player } from './player'
 
-export function simulate(player: Player) {
+export function simulateOnce(player: Player) {
   let pool = new Pool()
   let host = new Host()
+  player.reset()
 
   let players = [player, host]
 
@@ -72,4 +74,11 @@ export function simulate(player: Player) {
   }
 
   console.log('final balance:', player.balance)
+}
+
+export function simulateBatch(player: Player) {
+  for (let i = 0; i < 100; i++) {
+    let balance = evalPlayer(player)
+    console.log('f', i, balance)
+  }
 }

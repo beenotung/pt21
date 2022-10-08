@@ -55,9 +55,3 @@ export function evalPlayer(player: Player) {
 
   return player.balance
 }
-
-for (let i = 0; i < 100; i++) {
-  let player = new GamblerPlayer()
-  let balance = evalPlayer(player)
-  console.log('f', i, balance)
-}
