@@ -9,6 +9,10 @@ export abstract class Player {
 
   abstract name: string
 
+  reset() {
+    this.balance = 1000
+  }
+
   startGame(): number {
     this.cardOnHand.length = 0
     return this.getBet()
@@ -76,6 +80,12 @@ export class SafePlayer extends Player {
   name = 'safe-player'
 
   lastBalance = this.balance
+
+  reset() {
+    super.reset()
+    this.lastBalance = this.balance
+  }
+
   getBet(): number {
     let defer = (res: number) => {
       this.lastBalance = this.balance
@@ -105,6 +115,13 @@ export class GamblerPlayer extends Player {
 
   lastBalance = this.balance
   lastBet = 1
+
+  reset() {
+    super.reset()
+    this.lastBalance = this.balance
+    this.lastBet = 1
+  }
+
   getBet(): number {
     let defer = () => {
       this.lastBalance = this.balance
@@ -113,6 +130,7 @@ export class GamblerPlayer extends Player {
       }
       return this.lastBet
     }
+
     if (this.balance > this.lastBalance) {
       // last win
       this.lastBet = 1

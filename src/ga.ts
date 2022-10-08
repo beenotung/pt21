@@ -7,7 +7,7 @@ let host = new Host()
 export function evalPlayer(player: Player) {
   let players = [host, player]
 
-  player.balance = 1000
+  player.reset()
 
   for (let round = 1; round <= 10000 && player.balance >= 1; round++) {
     let bet = player.startGame()
