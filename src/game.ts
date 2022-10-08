@@ -1,16 +1,25 @@
 import { Pool } from './engine'
-import { GamblerPlayer, Host, RandomPlayer, SafePlayer } from './player'
+import { GamblerPlayer, Host, Player, RandomPlayer, SafePlayer } from './player'
 
-export function simulate() {
+export function simulate(player: Player) {
   let pool = new Pool()
   let host = new Host()
-  // let player = new RandomPlayer()
-  // let player = new SafePlayer()
-  let player = new GamblerPlayer()
 
   let players = [player, host]
 
-  function oneRound() {
+  for (let i = 1; i <= 10000 && player.balance >= 1; i++) {
+    function report(status: 'win' | 'lose' | 'draw') {
+      console.log({
+        round: i,
+        status,
+        bet,
+        balance: player.balance,
+        hostCards: host.cardOnHand,
+        playerCards: player.cardOnHand,
+        hostCheck,
+        playerCheck,
+      })
+    }
     let bet = player.startGame()
     host.startGame()
 
@@ -20,54 +29,46 @@ export function simulate() {
       while (player.shouldTake()) {
         player.addCard(pool.nextCard())
       }
-      player.endGame()
-      if (player.isDead) {
-        // console.log(player.name, 'dead')
-        // continue
-      }
     }
 
-    if (host.isDead && player.isDead) {
-      return
+    let playerCheck = player.checkCardOnHand()
+    let hostCheck = host.checkCardOnHand()
+
+    if (hostCheck.isDead && playerCheck.isDead) {
+      report('draw')
+      continue
     }
 
-    if (player.isDead) {
+    if (playerCheck.isDead) {
       player.balance -= bet
-      return
+      report('lose')
+      continue
     }
 
-    if (host.isDead) {
+    if (hostCheck.isDead) {
       player.balance += bet
-      return
+      report('win')
+      continue
     }
 
-    let playerScore = player.getMaxScore()
-    let hostScore = host.getMaxScore()
-
-    if (playerScore == hostScore) {
-      if (hostScore == 21) {
+    if (playerCheck.maxScore == hostCheck.maxScore) {
+      if (hostCheck.maxScore == 21) {
         player.balance -= bet
+        report('lose')
+      } else {
+        report('draw')
       }
-      return
+      continue
     }
 
-    let isPlayerWin = playerScore > hostScore
+    let isPlayerWin = playerCheck.maxScore > hostCheck.maxScore
     if (isPlayerWin) {
       player.balance += bet
+      report('win')
     } else {
       player.balance -= bet
+      report('lose')
     }
-  }
-
-  for (let i = 1; i <= 10000 && player.balance >= 1; i++) {
-    oneRound()
-    console.log({
-      round: i,
-      bet: player.lastBet,
-      balance: player.balance,
-      hostCards: host.cardOnHand,
-      playerCards: player.cardOnHand,
-    })
   }
 
   console.log('final balance:', player.balance)

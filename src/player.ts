@@ -9,36 +9,21 @@ export abstract class Player {
 
   abstract name: string
 
-  lastBet = 0
-
   startGame(): number {
     this.cardOnHand.length = 0
-    this.lastBet = this.getBet()
-    return this.lastBet
-  }
-
-  isDead: boolean = false
-  deadCount = 0
-  nonDeadCount = 0
-  endGame() {
-    let scores = evalCards(this.cardOnHand)
-    if (scores.length > 0 && scores.every(score => score > 21)) {
-      this.isDead = true
-      this.deadCount++
-      return
-    }
-    this.isDead = false
-    this.nonDeadCount++
+    return this.getBet()
   }
 
   abstract getBet(): number
 
   addCard(card: CardValue) {
     this.cardOnHand.push(card)
+    // let check = this.checkCardOnHand()
     // console.log(this.name, 'take card', {
     //   newCard: card,
     //   count: this.cardOnHand.length,
-    //   maxScore: this.getMaxScore(),
+    //   maxScore: check.maxScore,
+    //   isDead: check.isDead,
     // })
   }
 
@@ -48,15 +33,12 @@ export abstract class Player {
     return scores
   }
 
-  getMaxScore(): number {
+  checkCardOnHand() {
     let scores = this.getScores()
-     // .filter(score => score <= 21)
-    if (scores.length == 0) return 0
-    let result = max(...scores)
-    if (result == 0) {
-      debugger
-    }
-    return result
+    let validScores = scores.filter(score => score <= 21)
+    let maxScore = max(0, ...validScores)
+    let isDead = scores.length > 0 && validScores.length == 0
+    return { isDead, maxScore }
   }
 
   abstract shouldTake(): boolean
@@ -90,9 +72,6 @@ export class RandomPlayer extends Player {
   }
 }
 
-let alpha = 0.5
-let beta = 1 - alpha
-
 export class SafePlayer extends Player {
   name = 'safe-player'
   getBet(): number {
@@ -102,36 +81,15 @@ export class SafePlayer extends Player {
     return floor(this.balance / 1000) + 1
   }
 
-  chance = 0.5
-
   shouldTake(): boolean {
-    if (this.deadCount > this.nonDeadCount) {
-      // reduce chance
-      let t = this.nonDeadCount / this.deadCount
-      this.chance = this.chance * alpha + t * beta
-      console.log('reduce chance:', this.chance)
-    } else if (this.deadCount < this.nonDeadCount) {
-      // increase chance
-      let t = this.deadCount / this.nonDeadCount
-      this.chance = this.chance * alpha + t * beta
-      console.log('increase chance:', this.chance)
-    }
-    return random() < this.chance
+    let res = this.checkCardOnHand()
+    if (res.isDead) return false
+    return res.maxScore <= 16
   }
 }
 
-export class GamblerPlayer extends Player {
+export class GamblerPlayer extends SafePlayer {
   name = 'gambler-player'
-  getBet(): number {
-    if (this.balance > 1000) {
-      return 1
-    }
-    return floor(this.balance / 1000) + 1
-  }
-
-  shouldTake(): boolean {
-    return this.getMaxScore() <= 17
-  }
 }
 
 // secret
